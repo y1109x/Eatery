@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--保证接口和映射文件一一对应  -->
+<mapper namespace="com.eatery.cd.mapper.OrderMapper">
+
+    <select id="findOrderListByUserId" resultMap="orderRM">
+        SELECT * FROM
+
+        (SELECT o.order_id,o.orderdate,o.orderstatus,o.addresinfo,o.user_id,o.money,op.product_id,op.buynum FROM order_p
+        o LEFT JOIN product_order_p op ON o.`order_id` = op.`order_id`) o
+
+        LEFT JOIN
+
+        (SELECT p.product_id,p.product_name,p.price,p.sprice,p.pic,p.description,p.special,p.buy_count,pkp.name FROM
+        product_p p LEFT JOIN product_kind_p pkp ON p.`product_id` = pkp.`product_id`) p
+
+        ON o.product_id = p.product_id WHERE o.user_id = #{userId}
+    </select>
+
+    <select id="findOrderAll" resultMap="orderRM">
+       SELECT * FROM order_p
+    </select>
+
+
+<!--    <select id="findOrderTotal" resultType="Integer">-->
+<!--        select count(*) from order_p;-->
+<!--    </select>-->
+<!--    -->
+
+
+
+    <select id="findListByOrderId" resultMap="orderRM">
+        SELECT * FROM order_p WHERE order_id = #{orderId}
+    </select>
+
+
+    <resultMap id="orderRM" type="com.eatery.cd.pojo.Order" autoMapping="true">
+        <id column="order_id" property="orderId"/>
+        <collection property="product"
+                    select="selectProductCustom" column="order_id" >
+        </collection>
+    </resultMap>
+    <resultMap id="productOrderRM" type="com.eatery.cd.pojo.ProductOrder" autoMapping="true">
+        <id column="order_d" property="orderId"></id>
+    </resultMap>
+
+    <select id="selectProductCustom" resultType="com.eatery.cd.pojo.Product">
+        SELECT * FROM product_p RIGHT JOIN product_order_p ON product_order_p.product_id = product_p.product_id WHERE
+        product_order_p.order_id = #{order_id}
+    </select>
+
+    <resultMap id="productKindRm" type="com.eatery.cd.pojo.ProductKind" autoMapping="true">
+        <id column="product_kind_id" property="productKindId"></id>
+    </resultMap>
+
+    <resultMap id="userRM" type="com.eatery.cd.pojo.User" autoMapping="true">
+        <id column="user_id" property="userId"/>
+        <association property="userInfo" javaType="com.eatery.cd.pojo.UserInfo" resultMap="userInfoRM"></association>
+    </resultMap>
+
+    <resultMap id="userInfoRM" type="com.eatery.cd.pojo.UserInfo" autoMapping="true">
+        <id column="user_info_id" property="userInfoId"/>
+    </resultMap>
+
+
+    <insert id="saveToProductOrder">
+        insert into product_order_p values(
+        #{orderId},
+        #{productId},
+        #{buyNum}
+        )
+    </insert>
+
+    <select id="findPrdouctByOrderId" resultType="string">
+        select * from product_order_p where order_id = #{orderId}
+    </select>
+
+    <insert id="saveOrder">
+        insert into order_p values(
+        #{orderId},
+        #{orderDate},
+        #{orderStatus},
+        #{addResInfo},
+        #{userId},
+        #{money},
+        #{price}
+        )
+    </insert>
+    <update id="updateOrderStatus">
+
+        update order_p set orderstatus = #{status} where order_id = #{orderId}
+
+    </update>
+
+
+    <delete id="deleteOrder">
+        DELETE  FROM order_p where order_id = #{orderId}
+    </delete>
+    <delete id="deleteOrderAndProduct">
+        DELETE  from product_order_p where order_id = #{orderId}
+    </delete>
+
+    <update id="updateProductNum">
+        update product_p set buy_count = buy_count - #{buyCount} where product_id = #{pId}
+    </update>
+
+
+</mapper>
